@@ -1,4 +1,4 @@
-test1,test2,test3,test4
-Name,Grade,Class,Elective
-Req,Req,Req,Opt
-Joe,3,6B,ACSL
+test1,test2,test3
+Name,Class,Elective
+Req,Req,Opt
+Joe,6B,ACSL

@@ -1,0 +1,8 @@
+{"settings":[
+    {
+        "1":{"The minimum amount of times a subject needs to occur in a week":4}
+    },
+    {
+        "2":{"The number of slots in a day (a slot is a time period where a period can occur)":7}
+    }
+]}
