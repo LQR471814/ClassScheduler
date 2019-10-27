@@ -43,6 +43,26 @@ def console():
                 commands[command]()
                 break
 
+def engine(DataTable):
+    #? Schedule Table levels:
+    #? Level 1: The days of the week
+    #? level 2: The hours in the days of the week
+    #? Level 3 (Dictionary): The rooms in which the hours of the days of the week can take place
+    #? Values for Level 3 (Dictionary): A certain subject in a specific room in an hour of a day of a week (An hour is a key, A subject is the value)
+    Rooms = ["201", "202", "203", "204", "205", "206", "207"]
+    Classes = ["Math", "LA", "Grammar", "Science", "CS", "PE", "Spanish"]
+    SchedulePoint = {}
+    ScheduleTable = []
+    for i in range(len(Rooms)):
+        SchedulePoint[Rooms[i]] = Classes[i]
+    print(SchedulePoint)
+    for i in range(5):
+        ScheduleRow = []
+        for i in range(7):
+            SchedulePoint = {}
+            ScheduleRow.append(SchedulePoint)
+        ScheduleTable.append(ScheduleRow)
+
 def settingsFunc():
     with open("settings.json") as settings_file:
         settings = json.load(settings_file)
@@ -92,7 +112,7 @@ def startFunc():
         DataTable[InpTable[i][0]] = InpTable[i][1]
     for row in DataTable:
         print(row + ": " + DataTable[row])
-    
+    engine(DataTable)
 
 def quitFunc():
     sys.exit(0)
