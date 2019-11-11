@@ -1,21 +1,19 @@
 Input:
-    - a list of student:
+    - a list of classes
+    - a list of subjects: we assume there is 1:1 between subject and teacher, so we don't need teacher as Input
         - name
-        - class
-
-    - a list of subject: we assume there is 1:1 between subject and teacher, so we don't need teacher as Input
-        - name
-        - type: mandatory or elective
-        - number of slot per week: this means the number of slot for a given student
+        - [UNUSED] type: mandatory or elective
+        - number of slots per day: the number of time slots per day (we will assume every day has the same amount of time slots)
+        - Number of times a certain subject can occur in a week.
     - a list of rooms: we assume same size for all rooms
-    - number of a slot per day
     - fixed input (not user configurable):
-        5 day a week
-
+        5 days a week
+    - Assumed:
+        - No. room is always going to be smaller equal then to the number of subjects.
 
 Output:
-    - for each student, a 5 day schedule
-
+    - [UNUSED] for each student, a 5 day schedule
+    - A student class schedule. One schedule for each given class.
     - overall requirements:
         - a class could only be in one room for a given slot
     - requirements for a given student schedule:
