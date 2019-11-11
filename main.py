@@ -52,36 +52,51 @@ def engine(DataTable):
     #? level 2: The hours in the days of the week
     #? Level 3 (Dictionary): The rooms in which the hours of the days of the week can take place
     #? Values for Level 3 (Dictionary): A certain subject in a specific room in an hour of a day of a week (An hour is a key, A subject is the value)
+    SettingsFile = open("settings.json")
+    JsonSettings = json.load(SettingsFile)
+    JsonSettingsKey = []
+    for i in range(len(JsonSettings["settings"])):
+        for SettingKey in JsonSettings["settings"][i][str(i + 1)]:
+            JsonSettingsKey.append(SettingKey) 
     OutputTable = {}
     Week = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"]
-    Rooms = ["201", "202", "203", "204", "205", "206", "207"]
-    Subjects = ["Math", "LA", "Grammar", "Science", "CS", "PE", "Spanish"]
-    GradeClass = ["7A", "7B", "7C", "7D"]
-    NumbTimesSubjectOccurWeek = {"Math":4, "LA":4, "Grammar":4, "Science":4, "CS":4, "PE":4, "Spanish":4}
+    #? Input Values from settings (The commented out parts are default values)
+    RoomAmnt = JsonSettings["settings"][0]["1"][JsonSettingsKey[0]]
+    # RoomAmnt = 7
+    NumberOfSlotsPerDay = JsonSettings["settings"][1]["2"][JsonSettingsKey[1]]
+    # NumberOfSlotsPerDay = 5
+    NumbTimesSubjectOccurWeek = JsonSettings["settings"][2]["3"][JsonSettingsKey[2]]
+    # Subjects = ["Math", "LA", "Grammar", "Science", "CS", "PE", "Spanish"]
+    Subjects = []
+    for c in JsonSettings["settings"][2]["3"][JsonSettingsKey[2]]:
+        Subjects.append(c)
+    # NumbTimesSubjectOccurWeek = {"Math":5, "LA":5, "Grammar":5, "Science":4, "CS":4, "PE":4, "Spanish":4}
+    GradeClass = JsonSettings["settings"][3]["4"][JsonSettingsKey[3]]
+    # GradeClass = ["7A", "7B", "7C", "7D"]
+
     NumbTimesOccuredWeek = {"7A":[0, 0, 0, 0, 0, 0, 0], "7B":[0, 0, 0, 0, 0, 0, 0], "7C":[0, 0, 0, 0, 0, 0, 0], "7D":[0, 0, 0, 0, 0, 0, 0]}
-    NumberOfSlotsPerDay = 7
     SchedulePoint = {}
     ScheduleTable = []
     ExitLoop = False
     ExitLoop1 = False
-    # for i in range(len(Rooms)):
+    # for i in range(RoomAmnt):
     #     SchedulePoint[Rooms[i]] = Subjects[i]
     for x in range(5): #? Setup the schedule list / dictionary thing. (Days)
         ScheduleRow = []
         for y in range(NumberOfSlotsPerDay): #? Setup the schedule list / dictionary thing. (Rows in a Day)
             SchedulePoint = {}
-            for z in range(len(Rooms)):
-                SchedulePoint[Subjects[z]] = ["[EMPTY]", Rooms[z]]
+            for z in range(RoomAmnt):
+                SchedulePoint[Subjects[z]] = "[EMPTY]"
             ScheduleRow.append(SchedulePoint)
         ScheduleTable.append(ScheduleRow)
 
     #* DEPRECATED
     # for x in range(5): #? Run the schedule table through scheduling logic 
     #     for y in range(NumberOfSlotsPerDay):
-    #         for z in range(len(Rooms)):
+    #         for z in range(RoomAmnt):
     #             try: #? Fill a certain time slot with a certain class that's taking a subject that's occuring during that time slot
     #                 if NumbTimesOccuredWeek[GradeClass[z]][z] <= NumbTimesSubjectOccurWeek[z]: #? Checking if the No. times a subject has occured in a week has exceeded the maximum amount of times that subject can appear in a week.
-    #                     ScheduleTable[x][y][Subjects[z]][0] = GradeClass[z]
+    #                     ScheduleTable[x][y][Subjects[z]] = GradeClass[z]
     #                     NumbTimesOccuredWeek[GradeClass[z]][z] += 1
     #             except Exception as err: #? Checking for index out of range to skip.
     #                 print("Left empty!" + str(err))
@@ -97,21 +112,18 @@ def engine(DataTable):
     for x in range(5): #? Loop for 5 the 5 days in the chart
         n = 0 #? Set the current GradeClass indicator
         for y in range(NumberOfSlotsPerDay): #? Loop for all 7 slots in a day
-            for z in range(len(Rooms)): #? Loop for all different subjects that could occur during one slot for the number of rooms there are.
+            for z in range(RoomAmnt): #? Loop for all different subjects that could occur during one slot for the number of rooms there are.
                 ExitLoop = False
-                print(ScheduleTable[x][y])
                 try:
-                    if ScheduleTable[x][y][Subjects[z]][0] == "[EMPTY]": #? Check if the current slot is empty
+                    if ScheduleTable[x][y][Subjects[z]] == "[EMPTY]": #? Check if the current slot is empty
                         for i in range(NumberOfSlotsPerDay): #? Loop for check below
-                            if ScheduleTable[x][i][Subjects[z]][0] == GradeClass[n]: #? Check if subject has already been taken by a specific class in a certain other timeslot
-                                # print("x", x, "i", i, "GradeClass", GradeClass[n], "Subject", Subjects[z], ScheduleTable[x][i][Subjects[z]][0])
-                                # ScheduleTable[x][y][Subjects[z]][0] = "[EMPTY]"
+                            if  ScheduleTable[x][i][Subjects[z]] == GradeClass[n]: #? Check if subject has already been taken by a specific class in a certain other timeslot
                                 ExitLoop = True
                                 break
                         if ExitLoop == True:
                             continue
-                        for i in range(len(Rooms)): #? Loop for check below
-                            if ScheduleTable[x][y][Subjects[i]][0] == GradeClass[n]: #? Check if subject has already been filled in by specific class in current timeslot
+                        for i in range(RoomAmnt): #? Loop for check below
+                            if ScheduleTable[x][y][Subjects[i]] == GradeClass[n]: #? Check if subject has already been filled in by specific class in current timeslot
                                 ExitLoop = True
                                 break
                         if ExitLoop == False: #? If this slot and it's subject hasn't been filled before by a specific class then:
@@ -119,12 +131,12 @@ def engine(DataTable):
                                 ExitLoop1 = False
                                 for i in range(len(NumbTimesOccuredWeek[GradeClass[n]])): #? Loop to check if there is a better slot
                                     if NumbTimesOccuredWeek[GradeClass[n]][z] > NumbTimesOccuredWeek[GradeClass[n]][i]: #? Check if there is a better slot that this class can occupy (Normalize the final chart table result)
-                                        ScheduleTable[x][y][Subjects[i]][0] = GradeClass[n]
+                                        ScheduleTable[x][y][Subjects[i]] = GradeClass[n]
                                         NumbTimesOccuredWeek[GradeClass[n]][i] += 1
                                         ExitLoop1 = True
                                         break
                                 if ExitLoop1 == False: #? Occupy the slot
-                                    ScheduleTable[x][y][Subjects[z]][0] = GradeClass[n]
+                                    ScheduleTable[x][y][Subjects[z]] = GradeClass[n]
                                     NumbTimesOccuredWeek[GradeClass[n]][z] += 1
 
                 except Exception as err: #? Exception for index out of range
@@ -134,7 +146,6 @@ def engine(DataTable):
                     n += 1
                 else:
                     n = 0
-    print(NumbTimesOccuredWeek)
     
     # f = open("log.txt", "w") #? <DEBUG>
     # for row in ScheduleTable:
@@ -145,27 +156,35 @@ def engine(DataTable):
     #         f.write(str(point) + "\n")
     # f.close() #? </DEBUG>
 
+    print(NumbTimesOccuredWeek)
+    
     for c in GradeClass: #? Setup table for output
+        OutputTable[c] = {}
+    for c in GradeClass:
         for day in Week:
-            OutputTable[c] = {}
             OutputTable[c][day] = []
 
     n = 0
-    for x in range(5):
+    for x in range(5): #? Add values to the output table
         for y in range(NumberOfSlotsPerDay):
-            for z in range(len(Rooms)):
+            for z in range(RoomAmnt):
                 for n in range(len(GradeClass)):
-                    if ScheduleTable[x][y][Subjects[z]][0] == GradeClass[n]:
-                        OutputTable[GradeClass[n]][Week[x]].append([ScheduleTable[x][y][Subjects[z]]])
-                # if n < len(GradeClass):
-                #     n += 1
-                # else:
-                #     n = 0
+                    if ScheduleTable[x][y][Subjects[z]] == GradeClass[n]:
+                        OutputTable[GradeClass[n]][Week[x]].append([ScheduleTable[x][y][Subjects[z]], Subjects[z]])
     
-    for c in OutputTable:
+    for c in OutputTable: #? Write values from output table to 4 seperate .csv files
+        f = open(c + ".csv", "w")
+        f.write(", ")
+        for i in range(NumberOfSlotsPerDay):
+            f.write("Period " + str(i + 1) + ", ")
+        f.write("\n")
         for day in OutputTable[c]:
-            for schedule in OutputTable[c][day]:
-                print(c, day, schedule)
+            f.write(day + ", ")
+            for info in OutputTable[c][day]:
+                f.write(info[1] + ", ")
+            f.write("\n")
+        f.close()
+
 
 def settingsFunc():
     with open("settings.json") as settings_file:

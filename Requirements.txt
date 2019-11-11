@@ -19,3 +19,11 @@ Output:
     - requirements for a given student schedule:
         - for a given subject , there could only be slot in the day
         - for each subject, the number of slot per week must = the property of th subject 
+    - Syntax:
+    4 Class tables in syntax of:
+    Subject, slot1, slot2, slot3, etc...
+    Monday, 
+    Tuesday,
+    Wednesday,
+    Thursday,
+    Friday,
