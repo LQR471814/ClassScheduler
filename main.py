@@ -45,12 +45,15 @@ def console():
                 commands[command]()
                 break
 
+#! Scheduling engine
 def engine(DataTable):
     #? Schedule Table levels:
     #? Level 1: The days of the week
     #? level 2: The hours in the days of the week
     #? Level 3 (Dictionary): The rooms in which the hours of the days of the week can take place
     #? Values for Level 3 (Dictionary): A certain subject in a specific room in an hour of a day of a week (An hour is a key, A subject is the value)
+    OutputTable = {}
+    Week = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"]
     Rooms = ["201", "202", "203", "204", "205", "206", "207"]
     Subjects = ["Math", "LA", "Grammar", "Science", "CS", "PE", "Spanish"]
     GradeClass = ["7A", "7B", "7C", "7D"]
@@ -133,15 +136,36 @@ def engine(DataTable):
                     n = 0
     print(NumbTimesOccuredWeek)
     
-    f = open("log.txt", "w") #? <DEBUG>
-    for row in ScheduleTable: 
-        print("--------------------------------------------------------------------------------------------------------")
-        f.write("--------------------------------------------------------------------------------------------------------\n")
-        for point in row:
-            print(point)
-            f.write(str(point) + "\n")
-    f.close() #? </DEBUG>
+    # f = open("log.txt", "w") #? <DEBUG>
+    # for row in ScheduleTable:
+    #     print("--------------------------------------------------------------------------------------------------------")
+    #     f.write("--------------------------------------------------------------------------------------------------------\n")
+    #     for point in row:
+    #         print(point)
+    #         f.write(str(point) + "\n")
+    # f.close() #? </DEBUG>
+
+    for c in GradeClass: #? Setup table for output
+        for day in Week:
+            OutputTable[c] = {}
+            OutputTable[c][day] = []
+
+    n = 0
+    for x in range(5):
+        for y in range(NumberOfSlotsPerDay):
+            for z in range(len(Rooms)):
+                for n in range(len(GradeClass)):
+                    if ScheduleTable[x][y][Subjects[z]][0] == GradeClass[n]:
+                        OutputTable[GradeClass[n]][Week[x]].append([ScheduleTable[x][y][Subjects[z]]])
+                # if n < len(GradeClass):
+                #     n += 1
+                # else:
+                #     n = 0
     
+    for c in OutputTable:
+        for day in OutputTable[c]:
+            for schedule in OutputTable[c][day]:
+                print(c, day, schedule)
 
 def settingsFunc():
     with open("settings.json") as settings_file:
