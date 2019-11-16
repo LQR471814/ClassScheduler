@@ -114,7 +114,9 @@ def engine(DataTable):
     # SubjAmnt = 7
     NumberOfSlotsPerDay = JsonSettings["settings"][0]["1"][JsonSettingsKey[0]]
     # NumberOfSlotsPerDay = 5
-    NumbTimesSubjectOccurWeek = JsonSettings["settings"][1]["2"][JsonSettingsKey[1]]
+    NumbTimesSubjectOccurWeek = {}
+    for c in JsonSettings["settings"][1]["2"][JsonSettingsKey[1]]:
+        NumbTimesSubjectOccurWeek[c] = JsonSettings["settings"][1]["2"][JsonSettingsKey[1]][c]
     # Subjects = ["Math", "LA", "Grammar", "Science", "CS", "PE", "Spanish"]
     Subjects = []
     for c in JsonSettings["settings"][1]["2"][JsonSettingsKey[1]]:
