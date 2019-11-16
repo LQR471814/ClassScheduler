@@ -1,43 +1,93 @@
-#--------------------------------------------------#
-# Credit to Libraries that I used:                 #
-#                                                  #
-# WxPython(GUI programming): www.wxpython.org      #
-# sys(sys): Part of the standard python libraries  #
-#      https://docs.python.org/3/py-modindex.html  #
-# threading(multithreading): Part of the standard  #
-#    python libraries                              #
-#      https://docs.python.org/3/py-modindex.html  #
-# json(reading json settings file): Part of the    #
-#   standard python libraries                      #
-#      https://docs.python.org/3/py-modindex.html  #
-#--------------------------------------------------#
+#---------------------------------------------------------#
+# DISCLAIMER: THIS PROGRAM IS NOT LISCENED TO ANYONE IN   #
+# ANY SHAPE OR FORM, FEEL FREE TO EDIT IT HOW EVER YOU    #
+# LIKE.                                                   #
+#---------------------------------------------------------#
+# Credit to Libraries that I used:                        #
+#                                                         #
+# WxPython(GUI programming): https://www.wxpython.org     #
+# sys(system functions): Part of the standard python      #
+#   libraries                                             #
+#      https://docs.python.org/3/py-modindex.html         #
+# threading(multithreading): Part of the standard         #
+#   python libraries                                      #
+#      https://docs.python.org/3/py-modindex.html         #
+# json(reading json settings file): Part of the           #
+#   standard python libraries                             #
+#      https://docs.python.org/3/py-modindex.html         #
+#---------------------------------------------------------#
 
 import wx
+import wx.lib.newevent as WxNewevent
 import sys
 import threading
 import json
 
-# ? List Order:
-# ? Name, Class
+#? Custom Events:
+ExternalClose, EVT_EXT_CLOSE = WxNewevent.NewEvent()
 
-#! GUI Code
+#? GUI Code
 
+class settingsEditor(wx.Frame): #? A more user friendly settings editor than a JSON file
+    def __init__(self, title): #? Initialize window
+        #? Initialize
 
-class mainBox(wx.Frame):
-    def __init__(self, title):
+        wx.Frame.__init__(self, None, title=title, pos=(50, 50), size=(680, 720)) #? Initialize the window with a bunch of parameters
+        panel = wx.Panel(self, -1) #? Add a panel
+        panel.Layout() #? Use the panel
+        
+        #? Load settings
+        
+        self.SettingsFile = open("settings.json")
+        self.JsonSettings = json.load(self.SettingsFile)
+        self.JsonSettingsKey = []
+        for i in range(len(self.JsonSettings["settings"])):
+            for SettingKey in self.JsonSettings["settings"][i][str(i + 1)]:
+                self.JsonSettingsKey.append(SettingKey)
+        textCtrl1 = wx.TextCtrl(self, -1, self.JsonSettings["settings"][0]["1"][self.JsonSettingsKey[0]], size=(125, -1))
+        listCtrl1 = wx.ListCtrl(self, -1, size=(200, 100), style=wx.LC_EDIT_LABELS)
+        listCtrl1.InsertCollumn(0, "")
+        listCtrl1.InsertCollumn(1, "")
 
-        wx.Frame.__init__(self, None, title=title,
-                          pos=(50, 50), size=(640, 480))
-        panel = wx.Panel(self, -1)
-        panel.Layout()
-        self.SetBackgroundColour("WHITE")
-        self.Bind(wx.EVT_CLOSE, self.OnClosed)
-
+        
+        #? Bind and setup
+        
+        self.SetBackgroundColour("WHITE") #? Totally unneccesary
+        self.Bind(wx.EVT_CLOSE, self.OnClosed) #? Catch event for closing
+        self.Bind(EVT_EXT_CLOSE, self.OnExtClose) #? Catch custom event for closing from other causes ie. (quitFunc)
+        panel.Bind(wx.EVT_KEY_DOWN, self.OnKeyPressed) #? Catch event for keystrokes to close window with [ESC]
+        
+    def OnKeyPressed(self, event):
+        global Continue
+        keycode = event.GetKeyCode()
+        if keycode == 27:
+            Continue = False
+            self.Destroy()
+        
     def OnClosed(self, event):
+        global Continue
+        Continue = False
         self.Destroy()
 
-#! Command functions
+    def OnExtClose(self, event):
+        self.Destroy()
 
+#* UNUSED
+# class mainBox(wx.Frame):
+#     def __init__(self, title):
+
+#         wx.Frame.__init__(self, None, title=title,
+#                           pos=(50, 50), size=(640, 480))
+#         panel = wx.Panel(self, -1)
+#         panel.Layout()
+#         self.SetBackgroundColour("WHITE")
+#         self.Bind(wx.EVT_CLOSE, self.OnClosed)
+
+#     def OnClosed(self, event):
+#         self.Destroy()
+#* UNUSED
+
+#? Command functions
 
 def console():
     global commands
@@ -50,20 +100,11 @@ def console():
                 commands[command]()
                 break
 
-#! Scheduling engine
-
-
-def printBigTable(availabeTable):
-    for weekday in range(len(availabeTable)):
-        print("Day ", weekday+1)
-        print("========================")
-        for timeSlot in range(len(availabeTable[weekday])):
-            print("slot ", timeSlot, availabeTable[weekday][timeSlot])
-
+#? Scheduling engine
 
 def createPerDayPerClassDict(gradeClassList):
-    # this is only used for per day assignment
-    # return a dictionary, where key is the gradeclass, value is a another dict, key is subject, value is a set of assigned subjects
+    #? this is only used for per day assignment
+    #? return a dictionary, where key is the gradeclass, value is a another dict, key is subject, value is a set of assigned subjects
     r = {}
     for gclass in gradeClassList:
         r[gclass] = set()
@@ -71,8 +112,8 @@ def createPerDayPerClassDict(gradeClassList):
 
 
 def selectAssignment(gradeClassList, perSubjectOccurenceDict, availabeTable):
-    # perClassWeeklySubjectOccuranceDict, key is gradeclass name, value is another dict,
-    # key is subject name, value is current number of occurance, initialized to 0
+    #? perClassWeeklySubjectOccuranceDict, key is gradeclass name, value is another dict,
+    #? key is subject name, value is current number of occurance, initialized to 0
     perClassWeeklySubjectOccuranceDict = {}
     for gclass in gradeClassList:
         perClassWeeklySubjectOccuranceDict[gclass] = {}
@@ -95,12 +136,12 @@ def selectAssignment(gradeClassList, perSubjectOccurenceDict, availabeTable):
                             slotClassmappingSet.add(gclass)
 
 
-def engine(DataTable):
-    # ? Schedule Table levels:
-    # ? Level 1: The days of the week
-    # ? level 2: The hours in the days of the week
-    # ? Level 3 (Dictionary): The rooms in which the hours of the days of the week can take place
-    # ? Values for Level 3 (Dictionary): A certain subject in a specific room in an hour of a day of a week (An hour is a key, A subject is the value)
+def engine():
+    #? Schedule Table levels:
+    #? Level 1: The days of the week
+    #? level 2: The hours in the days of the week
+    #? Level 3 (Dictionary): The rooms in which the hours of the days of the week can take place
+    #? Values for Level 3 (Dictionary): A certain subject in a specific room in an hour of a day of a week (An hour is a key, A subject is the value)
     SettingsFile = open("settings.json")
     JsonSettings = json.load(SettingsFile)
     JsonSettingsKey = []
@@ -109,7 +150,7 @@ def engine(DataTable):
             JsonSettingsKey.append(SettingKey)
     OutputTable = {}
     Week = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"]
-    # ? Input Values from settings (The commented out parts are default values)
+    #? Input Values from settings (The commented out parts are default values)
     SubjAmnt = len(JsonSettings["settings"][1]["2"][JsonSettingsKey[1]])
     # SubjAmnt = 7
     NumberOfSlotsPerDay = JsonSettings["settings"][0]["1"][JsonSettingsKey[0]]
@@ -133,9 +174,9 @@ def engine(DataTable):
     ExitLoop1 = False
     # for i in range(SubjAmnt):
     #     SchedulePoint[Rooms[i]] = Subjects[i]
-    for x in range(5):  # ? Setup the schedule list / dictionary thing. (Days)
+    for x in range(5):  #? Setup the schedule list / dictionary thing. (Days)
         ScheduleRow = []
-        # ? Setup the schedule list / dictionary thing. (Rows in a Day)
+        #? Setup the schedule list / dictionary thing. (Rows in a Day)
         for y in range(NumberOfSlotsPerDay):
             SchedulePoint = {}
             for z in range(SubjAmnt):
@@ -174,47 +215,47 @@ def engine(DataTable):
     # * DEPRECATED
 
     # * DEPRECATED
-    # for x in range(5):  # ? Loop for 5 the 5 days in the chart
-    #     n = 0  # ? Set the current GradeClass indicator
-    #     for y in range(NumberOfSlotsPerDay):  # ? Loop for all 7 slots in a day
-    #         # ? Loop for all different subjects that could occur during one slot for the number of rooms there are.
+    # for x in range(5):  #? Loop for 5 the 5 days in the chart
+    #     n = 0  #? Set the current GradeClass indicator
+    #     for y in range(NumberOfSlotsPerDay):  #? Loop for all 7 slots in a day
+    #         #? Loop for all different subjects that could occur during one slot for the number of rooms there are.
     #         for z in range(SubjAmnt):
     #             ExitLoop = False
     #             try:
-    #                 # ? Check if the current slot is empty
+    #                 #? Check if the current slot is empty
     #                 if ScheduleTable[x][y][Subjects[z]] == "[EMPTY]":
-    #                     for i in range(NumberOfSlotsPerDay):  # ? Loop for check below
-    #                         # ? Check if subject has already been taken by a specific class in a certain other timeslot
+    #                     for i in range(NumberOfSlotsPerDay):  #? Loop for check below
+    #                         #? Check if subject has already been taken by a specific class in a certain other timeslot
     #                         if ScheduleTable[x][i][Subjects[z]] == GradeClass[n]:
     #                             ExitLoop = True
     #                             break
     #                     if ExitLoop == True:
     #                         continue
-    #                     for i in range(SubjAmnt):  # ? Loop for check below
-    #                         # ? Check if subject has already been filled in by specific class in current timeslot
+    #                     for i in range(SubjAmnt):  #? Loop for check below
+    #                         #? Check if subject has already been filled in by specific class in current timeslot
     #                         if ScheduleTable[x][y][Subjects[i]] == GradeClass[n]:
     #                             ExitLoop = True
     #                             break
-    #                     # ? If this slot and it's subject hasn't been filled before by a specific class then:
+    #                     #? If this slot and it's subject hasn't been filled before by a specific class then:
     #                     if ExitLoop == False:
-    #                         # ? If this specific subject hasn't already appeared throughout the week specific # of times
+    #                         #? If this specific subject hasn't already appeared throughout the week specific # of times
     #                         if NumbTimesOccuredWeek[GradeClass[n]][z] < NumbTimesSubjectOccurWeek[Subjects[z]]:
     #                             ExitLoop1 = False
-    #                             # ? Loop to check if there is a better slot
+    #                             #? Loop to check if there is a better slot
     #                             for i in range(len(NumbTimesOccuredWeek[GradeClass[n]])):
-    #                                 # ? Check if there is a better slot that this class can occupy (Normalize the final chart table result)
+    #                                 #? Check if there is a better slot that this class can occupy (Normalize the final chart table result)
     #                                 if NumbTimesOccuredWeek[GradeClass[n]][z] > NumbTimesOccuredWeek[GradeClass[n]][i]:
     #                                     ScheduleTable[x][y][Subjects[i]
     #                                                         ] = GradeClass[n]
     #                                     NumbTimesOccuredWeek[GradeClass[n]][i] += 1
     #                                     ExitLoop1 = True
     #                                     break
-    #                             if ExitLoop1 == False:  # ? Occupy the slot
+    #                             if ExitLoop1 == False:  #? Occupy the slot
     #                                 ScheduleTable[x][y][Subjects[z]
     #                                                     ] = GradeClass[n]
     #                                 NumbTimesOccuredWeek[GradeClass[n]][z] += 1
 
-    #             except Exception as err:  # ? Exception for index out of range
+    #             except Exception as err:  #? Exception for index out of range
     #                 if str(err) != "list index out of range":
     #                     print(str(err))
     #             if n < len(GradeClass):
@@ -223,25 +264,23 @@ def engine(DataTable):
     #                 n = 0
     # * DEPRECATED
 
-    f = open("log.txt", "w")  # ? <DEBUG>
-    for row in ScheduleTable:
-        print("--------------------------------------------------------------------------------------------------------")
-        f.write("--------------------------------------------------------------------------------------------------------\n")
-        for point in row:
-            print(point)
-            f.write(str(point) + "\n")
-    f.close()  # ? </DEBUG>
+    # f = open("log.txt", "w")  #? <DEBUG>
+    # for row in ScheduleTable:
+    #     print("--------------------------------------------------------------------------------------------------------")
+    #     f.write("--------------------------------------------------------------------------------------------------------\n")
+    #     for point in row:
+    #         print(point)
+    #         f.write(str(point) + "\n")
+    # f.close()  #? </DEBUG>
 
-    print(NumbTimesOccuredWeek)
-
-    for c in GradeClass:  # ? Setup table for output
+    for c in GradeClass:  #? Setup table for output
         OutputTable[c] = {}
     for c in GradeClass:
         for day in Week:
             OutputTable[c][day] = []
 
     n = 0
-    for x in range(5):  # ? Add values to the output table
+    for x in range(5):  #? Add values to the output table
         for y in range(NumberOfSlotsPerDay):
             for z in range(SubjAmnt):
                 for n in range(len(GradeClass)):
@@ -249,7 +288,7 @@ def engine(DataTable):
                         OutputTable[GradeClass[n]][Week[x]].append(
                             [ScheduleTable[x][y][Subjects[z]], Subjects[z]])
 
-    for c in OutputTable:  # ? Write values from output table to 4 seperate .csv files
+    for c in OutputTable:  #? Write values from output table to 4 seperate .csv files
         f = open(c + ".csv", "w")
         f.write(", ")
         for i in range(NumberOfSlotsPerDay):
@@ -262,8 +301,10 @@ def engine(DataTable):
             f.write("\n")
         f.close()
 
+    print("[FINISHED]")
 
 def settingsFunc():
+    global Continue
     with open("settings.json") as settings_file:
         settings = json.load(settings_file)
         for SettingOpts in settings["settings"]:
@@ -271,15 +312,14 @@ def settingsFunc():
                 for setting in SettingOpts[SettingNo]:
                     print(SettingNo + " - " + setting + ": " +
                           str(SettingOpts[SettingNo][setting]))
+        Continue = True
         console()
         # print("Input the new value for a setting #. ([Setting#]-[New Value])")
         # NewValue = input(" > ")
 
-
 def helpFunc():
     global HelpMenu
     print(HelpMenu)
-
 
 def guiFunc():
     # TODO: Finish the damn GUI
@@ -289,49 +329,24 @@ def guiFunc():
     # frame.Show(True)
     # app.MainLoop()
 
-
-def startFunc():
-    global Usage
-    global path
-
-    f = ""
-    fObj = None
-    InpTable = []
-    DataTable = {}
-    # ? Get input
-    print(Usage)
-    print("Please input the full path of the .csv file! (ex. C:\\Users\\Joe\\Documents\\class.csv or ~/Downloads/class.csv)")
-    path = input(" @: ")
-    if path != "test":  # ? DEBUG
-        try:
-            fObj = open(path, "r")
-        except:
-            print("That isn't a valid path!")
-            return
-    else:  # ? DEBUG
-        fObj = open("test.csv", "r")
-    f = fObj.read()
-    InpTable = f.split("\n")
-    for i in range(len(InpTable)):
-        InpTable[i] = InpTable[i].split(",")
-    for i in range(len(InpTable)):
-        DataTable[InpTable[i][0]] = InpTable[i][1]
-    for row in DataTable:
-        print(row + ": " + DataTable[row])
-    engine(DataTable)
-
-
 def quitFunc():
+    global frame
+    global Continue
+    global Exit
+    Exit = True
+    if Continue == True:
+        output = ExternalClose(content="destroy")
+        wx.PostEvent(frame, output)
     sys.exit(0)
 
 #! Variables
 
-
-path = ""
+Continue = False
+Exit = False
 
 commands = {"help": helpFunc,
             "gui": guiFunc,
-            "start": startFunc,
+            "run": engine,
             "quit": quitFunc,
             "settings": settingsFunc
             }
@@ -340,20 +355,9 @@ HelpMenu = """
  ------------ <HELP> ------------
  > help: Show this menu
  > gui: Enable experimental GUI
- > start: Starts the program
+ > run: Runs the program
  > settings: Shows the settings.
  > quit: Quits the control shell
-"""
-Usage = """
- ------------ <How to get a CSV file!> ------------
-- Get your excel document
-- Go to file
-- Save as
-- There should be a dropdown menu where you 
-    can see what file extensions you can
-    save the file as.
-- Select .csv file extension.
-- Choose a location to save your file.
 """
 
 #! Initalize: Threads and other.
@@ -362,3 +366,14 @@ print(HelpMenu)
 
 t1 = threading.Thread(target=console)
 t1.start()
+
+while True:
+    if Continue == True:
+        break
+    if Exit == True:
+        break
+if Continue == True:
+    app = wx.App()
+    frame = settingsEditor("Settings")
+    frame.Show()
+    app.MainLoop()
