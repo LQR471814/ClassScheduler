@@ -19,6 +19,7 @@
 
 import wx
 import wx.lib.newevent as WxNewevent
+import wx.lib.scrolledpanel as scrolled
 import sys
 import threading
 import json
@@ -33,29 +34,143 @@ class settingsEditor(wx.Frame): #? A more user friendly settings editor than a J
         #? Initialize
 
         wx.Frame.__init__(self, None, title=title, pos=(50, 50), size=(680, 720)) #? Initialize the window with a bunch of parameters
-        panel = wx.Panel(self, -1) #? Add a panel
-        panel.Layout() #? Use the panel
+        self.panel1 = scrolled.ScrolledPanel(self, -1) #? Add a panel
         
+        self.CloseButtonIdDictionary = {}
+
         #? Load settings
         
+        self.icon = wx.Icon()
+        self.icon.CopyFromBitmap(wx.Image("icon.ico").ConvertToBitmap())
+        self.SetIcon(self.icon)
+        self.n = 0
+        self.ListOfSettingFields = []
         self.SettingsFile = open("settings.json")
         self.JsonSettings = json.load(self.SettingsFile)
         self.JsonSettingsKey = []
-        for i in range(len(self.JsonSettings["settings"])):
+        for i in range(len(self.JsonSettings["settings"])): #? Generate settings key list
             for SettingKey in self.JsonSettings["settings"][i][str(i + 1)]:
                 self.JsonSettingsKey.append(SettingKey)
-        textCtrl1 = wx.TextCtrl(self, -1, self.JsonSettings["settings"][0]["1"][self.JsonSettingsKey[0]], size=(125, -1))
-        listCtrl1 = wx.ListCtrl(self, -1, size=(200, 100), style=wx.LC_EDIT_LABELS)
-        listCtrl1.InsertCollumn(0, "")
-        listCtrl1.InsertCollumn(1, "")
 
+        #? Sizers Sections
+        #? Main sizer that contains all of the sizer sections
+        self.topsizer = wx.BoxSizer(wx.VERTICAL)
+        
+        # self.vsizer1 = wx.GridSizer(rows=len(self.JsonSettings["settings"][1]["2"][self.JsonSettingsKey[1]]), cols=3, hgap=5, vgap=5)
+        #? Sizer 1 section (Settings #1 & Desc. of settings #2)
+        self.vsizer = wx.BoxSizer(wx.VERTICAL)
+        self.hsizer = wx.BoxSizer(wx.HORIZONTAL)
+        
+        #? Sizer 2 section (Settings #2)
+        self.vsizer1 = wx.BoxSizer(wx.VERTICAL)
+        
+        #? Sizer 3 section (Desc. of settings #3)
+
+        #? Sizer 4 section (settings #3)
+        self.vsizer2 = wx.BoxSizer(wx.VERTICAL)
+        
+        #? Settings #1
+        self.staticText = wx.StaticText(self.panel1, -1, "The number of periods in a day: ", pos=(10, 10))
+        self.textCtrl = wx.TextCtrl(self.panel1, -1, str(self.JsonSettings["settings"][0]["1"][self.JsonSettingsKey[0]]), size=(125, -1), pos=(180, 7))
+        self.hsizer.Add(self.staticText)
+        self.hsizer.Add(self.textCtrl)
+        self.staticText1 = wx.StaticText(self.panel1, -1, "The subjects in a week | the amount of time they can occur in a week: ", pos=(10, 40))
+        
+        self.vsizer.Add(self.hsizer)
+        self.vsizer.Add(self.staticText1)
+        self.topsizer.Add(self.vsizer, 0, wx.ALL)
+
+        
+        #? Settings #2
+        self.bmp = wx.Image("X.png").ConvertToBitmap()
+        for subj in self.JsonSettings["settings"][1]["2"][self.JsonSettingsKey[1]]: #? Generate list of setting #2
+            textCtrl1 = wx.TextCtrl(self.panel1, -1, subj, size=(85, -1))#, pos=(20, 25 * (self.n + 1) + 40))
+            textCtrl2 = wx.TextCtrl(self.panel1, -1, str(self.JsonSettings["settings"][1]["2"][self.JsonSettingsKey[1]][subj]), size=(50, -1))#, pos=(110, 25 * (self.n + 1) + 40))
+            close1 = wx.BitmapButton(self.panel1, -1, bitmap=self.bmp, size=(20, 20))#, pos=(165, 25 * (self.n + 1) + 42))
+            close1.Bind(wx.EVT_BUTTON, self.OnDeleteRow)
+            boxsizer = wx.BoxSizer(wx.HORIZONTAL)
+            boxsizer.Add(textCtrl1, 1, wx.ALL, 2)
+            boxsizer.Add(textCtrl2, 1, wx.ALL, 2)
+            boxsizer.Add(close1, 0, wx.ALL, 2)
+            self.CloseButtonIdDictionary[close1.GetId()] = boxsizer
+            self.vsizer1.Add(boxsizer, 0, wx.ALL)
+            # self.vsizer1.Add(textCtrl1, 0, wx.EXPAND)
+            # self.vsizer1.Add(textCtrl2, 0, wx.EXPAND)
+            # self.vsizer1.Add(close1, 0, wx.EXPAND)
+            # textCtrl1.Destroy()
+            # textCtrl2.Destroy()
+            # close1.Destroy()
+            # self.ListOfSettingFields.append([textCtrl1, textCtrl2, close1])
+            self.n += 1
+        self.button = wx.Button(self.panel1, -1, str("Add"), pos=(25, 25 * (self.n + 1) + 42))
+        self.topsizer.Add(self.vsizer1, 0, wx.ALL)
+        self.topsizer.Add(self.button, 0, wx.ALL)
+
+
+        #? Desc. Settings #3
+        self.staticText1 = wx.StaticText(self.panel1, -1, "The Classes: ")
+        self.topsizer.Add(self.staticText1)
+
+        #? Settings #3
+        for c in self.JsonSettings["settings"][2]["3"][self.JsonSettingsKey[2]]:
+            textCtrl3 = wx.TextCtrl(self.panel1, -1, c, size=(75, -1))
+            self.vsizer2.Add(textCtrl3, 1, wx.ALL, 2)
+        self.topsizer.Add(self.vsizer2, 0, wx.ALL)
+
+        # self.panel1.SetSizer(self.vsizer1)
+        self.panel1.SetSizerAndFit(self.topsizer)
+        self.panel1.SetupScrolling()
+        self.panel1.Refresh()
+        # self.panel1.Fit()
+        # self.panel1.SetPosition((500, 500))
+        # self.vsizer1.Remove(0)
+        self.panel1.Layout()
         
         #? Bind and setup
         
+
+        # self.vsizer1.Layout()
+        # panel.Layout() #? Use the panel
+
         self.SetBackgroundColour("WHITE") #? Totally unneccesary
         self.Bind(wx.EVT_CLOSE, self.OnClosed) #? Catch event for closing
         self.Bind(EVT_EXT_CLOSE, self.OnExtClose) #? Catch custom event for closing from other causes ie. (quitFunc)
-        panel.Bind(wx.EVT_KEY_DOWN, self.OnKeyPressed) #? Catch event for keystrokes to close window with [ESC]
+        self.button.Bind(wx.EVT_BUTTON, self.OnAddRow)
+        self.panel1.Bind(wx.EVT_KEY_DOWN, self.OnKeyPressed) #? Catch event for keystrokes to close window with [ESC]
+
+    def OnDeleteRow(self, event):
+        listOfItems = self.vsizer1.GetChildren()
+        self.n -= 1
+        self.vsizer1.Hide(self.CloseButtonIdDictionary[event.GetId()])
+        self.vsizer1.Remove(self.CloseButtonIdDictionary[event.GetId()])
+        self.CloseButtonIdDictionary.pop(event.GetId())
+        # for key in self.CloseButtonIdDictionary:
+        #     self.CloseButtonIdDictionary[key] -= 1
+        self.panel1.Fit()
+        self.panel1.Layout()
+        self.panel1.Refresh()
+        print("Deleted!")
+        # self.panel1.SetSizerAndFit(self.topsizer)
+
+    def OnAddRow(self, event):
+        # self.vsizer1.SetRows(self.vsizer1.GetRows() + 1)
+        self.n += 1
+        bmp = wx.Image("X.png").ConvertToBitmap()
+        self.button.SetPosition((25, 25 * (self.n + 1) + 42))
+        textCtrl1 = wx.TextCtrl(self.panel1, -1, "", size=(85, -1))
+        textCtrl2 = wx.TextCtrl(self.panel1, -1, "", size=(50, -1))
+        close1 = wx.BitmapButton(self.panel1, -1, bitmap=bmp, size=(20, 20))
+        close1.Bind(wx.EVT_BUTTON, self.OnDeleteRow)
+        boxsizer = wx.BoxSizer(wx.HORIZONTAL)
+        boxsizer.Add(textCtrl1, 1, wx.ALL, 2)
+        boxsizer.Add(textCtrl2, 1, wx.ALL, 2)
+        boxsizer.Add(close1, 0, wx.ALL, 2)
+        self.CloseButtonIdDictionary[close1.GetId()] = boxsizer
+        self.vsizer1.Add(boxsizer, 0, wx.ALL)
+        # self.vsizer1.Layout()
+        self.panel1.SetSizerAndFit(self.topsizer)
+        self.panel1.SetupScrolling()
+        self.panel1.Layout()
         
     def OnKeyPressed(self, event):
         global Continue
@@ -166,8 +281,15 @@ def engine():
     GradeClass = JsonSettings["settings"][2]["3"][JsonSettingsKey[2]]
     # GradeClass = ["7A", "7B", "7C", "7D"]
 
-    NumbTimesOccuredWeek = {"7A": [0, 0, 0, 0, 0, 0, 0], "7B": [
-        0, 0, 0, 0, 0, 0, 0], "7C": [0, 0, 0, 0, 0, 0, 0], "7D": [0, 0, 0, 0, 0, 0, 0]}
+    NumbTimesOccuredWeek = {}
+    TimesOccuredWeekCurrent = []
+    for i in range(len(Subjects)):
+        TimesOccuredWeekCurrent.append(0)
+    for c in GradeClass:
+        NumbTimesOccuredWeek[c] = TimesOccuredWeekCurrent
+
+    # NumbTimesOccuredWeek = {"7A": [0, 0, 0, 0, 0, 0, 0], "7B": [
+    #     0, 0, 0, 0, 0, 0, 0], "7C": [0, 0, 0, 0, 0, 0, 0], "7D": [0, 0, 0, 0, 0, 0, 0]}
     SchedulePoint = {}
     ScheduleTable = []
     ExitLoop = False

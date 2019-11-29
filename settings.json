@@ -1,14 +1,11 @@
 {"settings":[
     {
-        "1":{"The number of slots in a day (a slot is a time period where a period can occur)":7}
+        "1":{"The number of slots in a day (a slot is a time period where a period can occur)":5}
     },
     {
-        "2":{"The subjects in a week":{"Math":5, "LA":5, "Grammar":5, "Science":4, "CS":4, "PE":4, "Spanish":4}}
+        "2":{"The subjects in a week":{"Math":9, "LA":9, "Grammar":9, "Science":9, "CS":9, "PE":9, "Spanish":9}}
     },
     {
         "3":{"The classes":["7A", "7B", "7C", "7D"]}
-    },
-    {
-        "4":{"GUI enabled":0}
     }
 ]}
