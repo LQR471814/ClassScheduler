@@ -37,6 +37,7 @@ class settingsEditor(wx.Frame): #? A more user friendly settings editor than a J
         self.panel1 = scrolled.ScrolledPanel(self, -1) #? Add a panel
         
         self.CloseButtonIdDictionary = {}
+        self.CloseButtonIdDictionary1 = {}
 
         #? Load settings
         
@@ -72,6 +73,7 @@ class settingsEditor(wx.Frame): #? A more user friendly settings editor than a J
         #? Settings #1
         self.staticText = wx.StaticText(self.panel1, -1, "The number of periods in a day: ", pos=(10, 10))
         self.textCtrl = wx.TextCtrl(self.panel1, -1, str(self.JsonSettings["settings"][0]["1"][self.JsonSettingsKey[0]]), size=(125, -1), pos=(180, 7))
+        self.textCtrl.Bind(wx.EVT_TEXT, self.OnChangeText)
         self.hsizer.Add(self.staticText)
         self.hsizer.Add(self.textCtrl)
         self.staticText1 = wx.StaticText(self.panel1, -1, "The subjects in a week | the amount of time they can occur in a week: ", pos=(10, 40))
@@ -102,7 +104,7 @@ class settingsEditor(wx.Frame): #? A more user friendly settings editor than a J
             # close1.Destroy()
             # self.ListOfSettingFields.append([textCtrl1, textCtrl2, close1])
             self.n += 1
-        self.button = wx.Button(self.panel1, -1, str("Add"), pos=(25, 25 * (self.n + 1) + 42))
+        self.button = wx.Button(self.panel1, -1, str("Add"))
         self.topsizer.Add(self.vsizer1, 0, wx.ALL)
         self.topsizer.Add(self.button, 0, wx.ALL)
 
@@ -110,14 +112,32 @@ class settingsEditor(wx.Frame): #? A more user friendly settings editor than a J
         #? Desc. Settings #3
         self.staticText1 = wx.StaticText(self.panel1, -1, "The Classes: ")
         self.topsizer.Add(self.staticText1)
-
+        
         #? Settings #3
+        bmp = wx.Image("X.png").ConvertToBitmap()
         for c in self.JsonSettings["settings"][2]["3"][self.JsonSettingsKey[2]]:
             textCtrl3 = wx.TextCtrl(self.panel1, -1, c, size=(75, -1))
-            self.vsizer2.Add(textCtrl3, 1, wx.ALL, 2)
+            close2 = wx.BitmapButton(self.panel1, -1, bitmap=bmp, size=(20, 20))
+            close2.Bind(wx.EVT_BUTTON, self.OnDeleteRowClass)
+            boxsizer = wx.BoxSizer(wx.HORIZONTAL)
+            boxsizer.Add(textCtrl3, 1, wx.ALL, 2)
+            boxsizer.Add(close2, 0, wx.ALL, 2)
+            self.vsizer2.Add(boxsizer, 1, wx.ALL, 2)
+            self.CloseButtonIdDictionary1[close2.GetId()] = boxsizer
+        self.button1 = wx.Button(self.panel1, -1, str("Add"))
+        self.button1.Bind(wx.EVT_BUTTON, self.OnAddRowClass)
         self.topsizer.Add(self.vsizer2, 0, wx.ALL)
-
+        self.topsizer.Add(self.button1, 0, wx.ALL)
         # self.panel1.SetSizer(self.vsizer1)
+        
+        self.OkSizer = wx.BoxSizer(wx.HORIZONTAL)
+        self.OkSizer1 = wx.BoxSizer(wx.VERTICAL)
+        self.OkButton = wx.Button(self.panel1, -1, "Ok")
+        self.OkButton.Bind(wx.EVT_BUTTON, self.WriteSettings)
+        self.OkSizer1.Add(self.OkButton)
+        self.OkSizer.Add(self.OkSizer1)
+        self.topsizer.Add(self.OkSizer)
+        
         self.panel1.SetSizerAndFit(self.topsizer)
         self.panel1.SetupScrolling()
         self.panel1.Refresh()
@@ -138,6 +158,33 @@ class settingsEditor(wx.Frame): #? A more user friendly settings editor than a J
         self.button.Bind(wx.EVT_BUTTON, self.OnAddRow)
         self.panel1.Bind(wx.EVT_KEY_DOWN, self.OnKeyPressed) #? Catch event for keystrokes to close window with [ESC]
 
+    def OnChangeText(self, event):
+        # print(dir(event))
+        text = event.GetString()
+        try:
+            self.JsonSettings["settings"][0]["1"][self.JsonSettingsKey[0]] = int(text)
+        except Exception as err:
+            if text != "":
+                dlg = wx.MessageDialog(self, 'Invalid input!',
+                                'What you just inputed was not a number! Please input a number then proceed. If not your changes will not be saved.',
+                                wx.OK | wx.ICON_INFORMATION
+                                #wx.YES_NO | wx.NO_DEFAULT | wx.CANCEL | wx.ICON_INFORMATION
+                                )
+                dlg.ShowModal()
+                dlg.Destroy()
+
+    def WriteSettings(self, event):
+        global Continue
+        Continue = False
+        self.SettingsFile.close()
+        f = open("settings.json", "w")
+        # x = str(self.JsonSettings)
+        print(str(self.JsonSettings))
+        # parsed = json.load(str(self.JsonSettings))
+        # json.dumps(parsed, indent=4, sort_keys=True)
+        # json.dump(self.JsonSettings, f)
+        self.Destroy()
+
     def OnDeleteRow(self, event):
         listOfItems = self.vsizer1.GetChildren()
         self.n -= 1
@@ -156,17 +203,49 @@ class settingsEditor(wx.Frame): #? A more user friendly settings editor than a J
         # self.vsizer1.SetRows(self.vsizer1.GetRows() + 1)
         self.n += 1
         bmp = wx.Image("X.png").ConvertToBitmap()
-        self.button.SetPosition((25, 25 * (self.n + 1) + 42))
-        textCtrl1 = wx.TextCtrl(self.panel1, -1, "", size=(85, -1))
-        textCtrl2 = wx.TextCtrl(self.panel1, -1, "", size=(50, -1))
-        close1 = wx.BitmapButton(self.panel1, -1, bitmap=bmp, size=(20, 20))
-        close1.Bind(wx.EVT_BUTTON, self.OnDeleteRow)
+        self.button1.SetPosition((25, 25 * (self.n + 1) + 42))
+        textCtrl1 = wx.TextCtrl(self, -1, "")
+        textCtrl2 = wx.TextCtrl(self, -1, "")
+        close2 = wx.BitmapButton(self.panel1, -1, bitmap=bmp, size=(20, 20))
+        close2.Bind(wx.EVT_BUTTON, self.OnDeleteRow)
         boxsizer = wx.BoxSizer(wx.HORIZONTAL)
         boxsizer.Add(textCtrl1, 1, wx.ALL, 2)
         boxsizer.Add(textCtrl2, 1, wx.ALL, 2)
         boxsizer.Add(close1, 0, wx.ALL, 2)
-        self.CloseButtonIdDictionary[close1.GetId()] = boxsizer
-        self.vsizer1.Add(boxsizer, 0, wx.ALL)
+        self.CloseButtonIdDictionary[close2.GetId()] = boxsizer
+        self.vsizer2.Add(boxsizer, 0, wx.ALL)
+        # self.vsizer1.Layout()
+        self.panel1.SetSizerAndFit(self.topsizer)
+        self.panel1.SetupScrolling()
+        self.panel1.Layout()
+
+    def OnDeleteRowClass(self, event):
+        listOfItems = self.vsizer1.GetChildren()
+        self.n -= 1
+        self.vsizer2.Hide(self.CloseButtonIdDictionary1[event.GetId()])
+        self.vsizer2.Remove(self.CloseButtonIdDictionary1[event.GetId()])
+        self.CloseButtonIdDictionary1.pop(event.GetId())
+        # for key in self.CloseButtonIdDictionary:
+        #     self.CloseButtonIdDictionary[key] -= 1
+        self.panel1.Fit()
+        self.panel1.Layout()
+        self.panel1.Refresh()
+        print("Deleted!")
+        # self.panel1.SetSizerAndFit(self.topsizer)
+
+    def OnAddRowClass(self, event):
+        # self.vsizer1.SetRows(self.vsizer1.GetRows() + 1)
+        self.n += 1
+        bmp = wx.Image("X.png").ConvertToBitmap()
+        self.button1.SetPosition((25, 25 * (self.n + 1) + 42))
+        textCtrl1 = wx.TextCtrl(self.panel1, -1, "", size=(75, -1))
+        close3 = wx.BitmapButton(self.panel1, -1, bitmap=bmp, size=(20, 20))
+        close3.Bind(wx.EVT_BUTTON, self.OnDeleteRowClass)
+        boxsizer = wx.BoxSizer(wx.HORIZONTAL)
+        boxsizer.Add(textCtrl1, 1, wx.ALL, 2)
+        boxsizer.Add(close3, 0, wx.ALL, 2)
+        self.CloseButtonIdDictionary1[close3.GetId()] = boxsizer
+        self.vsizer2.Add(boxsizer, 0, wx.ALL)
         # self.vsizer1.Layout()
         self.panel1.SetSizerAndFit(self.topsizer)
         self.panel1.SetupScrolling()

@@ -3,7 +3,7 @@
         "1":{"The number of slots in a day (a slot is a time period where a period can occur)":5}
     },
     {
-        "2":{"The subjects in a week":{"Math":9, "LA":9, "Grammar":9, "Science":9, "CS":9, "PE":9, "Spanish":9}}
+        "2":{"The subjects in a week":{"Math":4, "LA":4, "Grammar":4, "Science":4, "CS":3, "PE":3, "Spanish":3}}
     },
     {
         "3":{"The classes":["7A", "7B", "7C", "7D"]}
